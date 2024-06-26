@@ -1,41 +1,84 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button } from 'rsuite';
-import fun from './funciones';  // Importa tus funciones necesarias
-import CustomTable from '../components/CustomTable';  // Asegúrate de importar tu tabla personalizada
+import { Form, Input, Button, SelectPicker } from 'rsuite';
+import fun from './funciones'; 
+import CustomTable from '../components/CustomTable';  
 import columnsHeaders from '../headers/IndexAsistentes';
+import asistenciaProxie from '../proxies/asistenciaProxie';
+import { toast } from 'react-toastify';
 
 const Index = () => {
     const [formData, setFormData] = useState({
         QR: '',
+        IDEVENTO: null,
         CODIGO: '',
-        NOMBRE: '',
-        APELLIDOS: '',
-        DNI: '',
-        FECHA: '',
-        HORA: '',
+        NOMBRES: '',
+        TIPO: 1,
     });
+    const [eventos, setEventos] = useState([]);
 
     useEffect(() => {
-        // Función para actualizar el formulario basado en QR
+        const cargarEventos = async () => {
+            try {
+                const response = await asistenciaProxie.getEventos();
+                if (response.status === 200) {
+                    setEventos(response.data?.map((evento) => ({
+                        value: evento.ID,
+                        label: evento.EVENTO,
+                    })) || []);
+                }
+            } catch (error) {
+                setEventos([]);
+            }
+        };
+
+        cargarEventos();
+
+        function hideError(e) {
+            if (e.message === 'ResizeObserver loop completed with undelivered notifications.') {
+                const resizeObserverErrDiv = document.getElementById(
+                    'webpack-dev-server-client-overlay-div'
+                );
+                const resizeObserverErr = document.getElementById(
+                    'webpack-dev-server-client-overlay'
+                );
+                if (resizeObserverErr) {
+                    resizeObserverErr.setAttribute('style', 'display: none');
+                }
+                if (resizeObserverErrDiv) {
+                    resizeObserverErrDiv.setAttribute('style', 'display: none');
+                }
+            }
+        }
+
+        window.addEventListener('error', hideError)
+        return () => {
+            window.addEventListener('error', hideError)
+        }
+    }, [])
+
+    useEffect(() => {
         const actualizarFormulario = () => {
             let newQR = formData.QR.trim().toUpperCase();
             if (newQR.length > 0) {
                 let textoCorregido = newQR
                     .replace(/Ã©/g, 'É')
-                    .replace(/Ã±/g, 'Ñ');
+                    .replace(/Ã±/g, 'Ñ')
+                    .replace(/Ã³/g, 'Ó')
+                    .replace(/Ã¡/g, 'Á')
+                    .replace(/Ã­/g, 'Í')
+                    .replace(/Â/g, '')
+                    .replace(/Ãº/g, 'Ú');
 
+                console.log('Texto corregido:', textoCorregido);
+                textoCorregido = textoCorregido.trim();
                 let datos = textoCorregido.split(';');
                 let codigo = datos?.[0]?.split(':')?.[1] || "";
                 let nombre = datos?.[1]?.split(':')?.[1] || "";
-                let apellidos = datos?.[2]?.split(':')?.[1] || "";
-                let dni = datos?.[3]?.split(':')?.[1] || "";
 
                 setFormData((prevData) => ({
                     ...prevData,
                     CODIGO: codigo.replace(/'/g, ''),
-                    NOMBRE: nombre.replace(/'/g, ''),
-                    APELLIDOS: apellidos.replace(/'/g, ''),
-                    DNI: dni.replace(/'/g, ''),
+                    NOMBRES: nombre.replace(/'/g, ''),
                     FECHA: new Date().toISOString().split('T')[0],
                     HORA: fun.formatearHora(new Date()),
                 }));
@@ -43,17 +86,13 @@ const Index = () => {
                 setFormData((prevData) => ({
                     ...prevData,
                     CODIGO: '',
-                    NOMBRE: '',
-                    APELLIDOS: '',
-                    DNI: '',
-                    FECHA: '',
-                    HORA: '',
+                    NOMBRES: '',
                 }));
             }
         };
 
-        actualizarFormulario(); // Llama a la función al montar y cuando QR cambia
-    }, [formData.QR]); // Dependencia para ejecutar cuando QR cambia
+        actualizarFormulario();
+    }, [formData.QR]);
 
     const handleChange = (value, name) => {
         setFormData((prevData) => ({
@@ -64,13 +103,33 @@ const Index = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Aquí puedes agregar lógica para enviar los datos del formulario
-        console.log('Datos del formulario:', formData);
-        // Por ejemplo, puedes llamar a una función para enviar los datos a una API
-        // enviarDatos(formData);
+        // valir que evento, codigo, y tipo tenga algo
+        if (!formData.IDEVENTO) return toast.error('Seleccione un evento', { toastId: 'evento' });
+        if (!formData.CODIGO) return toast.error('Ingrese un código', { toastId: 'codigo' });
+        if (!formData.TIPO) return toast.error('Seleccione un tipo', { toastId: 'tipo' });
+
+        // enviar datos al servidor
+        asistenciaProxie.createAsistencia(formData)
+            .then((response) => {
+                console.log('Response:', response);
+                if (response.status === 200) {
+                    toast.success('Asistencia registrada correctamente', { toastId: 'asistencia' });
+                    // setFormData({
+                    //     QR: '',
+                    //     IDEVENTO: null,
+                    //     CODIGO: '',
+                    //     NOMBRES: '',
+                    //     TIPO: 1,
+                    // });
+                } else {
+                    toast.error('Error al registrar la asistencia', { toastId: 'asistencia' });
+                }
+            })
+            .catch((error) => {
+                toast.error('Error al registrar la asistencia', { toastId: 'asistencia' });
+            });
     };
 
-    // Función para renderizar las columnas de la tabla (ajusta según tus necesidades)
     const renderColumnsTable = () => {
         return columnsHeaders.IndexTableAsistentes;
     };
@@ -80,11 +139,47 @@ const Index = () => {
             <div className="w-full p-8 bg-white rounded-lg shadow-md mb-8">
                 <h2 className="text-2xl font-bold mb-6 text-center">Formulario de Registro</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="flex flex-col col-span-2">
+                        <label className='mb-2'>Evento</label>
+                        <SelectPicker
+                            data={eventos}
+                            value={formData.IDEVENTO}
+                            onChange={(value) => setFormData((prevData) => ({
+                                ...prevData,
+                                IDEVENTO: value || null,
+                            }))}
+                            placeholder="Seleccionar"
+                            locale={{ noResultsText: 'No hay resultados encontrados' }}
+                        />
+                    </div>
+                    <div className="flex flex-col col-span-2">
+                        <label className='mb-2'>Tipo</label>
+                        <SelectPicker
+                            data={[
+                                { label: 'Entrada', value: 1 },
+                                { label: 'Saluda', value: 2 },
+                            ]}
+                            value={formData?.TIPO || null}
+                            onChange={(value) => {
+                                try {
+                                    setFormData((prevData) => ({
+                                        ...prevData,
+                                        TIPO: value || null,
+                                    }));
+                                } catch (error) {
+                                    console.error('Error en handleChange de SelectPicker:', error);
+                                }
+                            }}
+                            placeholder="Seleccionar"
+                            locale={{ noResultsText: 'No hay resultados encontrados' }}
+                        />
+                    </div>
                     <div>
                         <label>QR</label>
                         <Input
                             style={{ color: "white" }}
                             name="QR"
+                            autoComplete='off'
                             value={formData.QR}
                             onChange={(value) => handleChange(value, 'QR')}
                             className="w-full"
@@ -100,32 +195,12 @@ const Index = () => {
                             disabled
                         />
                     </div>
-                    <div>
-                        <label>Nombre</label>
+                    <div className="col-span-2">
+                        <label>Nombres</label>
                         <Input
-                            name="NOMBRE"
-                            value={formData.NOMBRE}
-                            onChange={(value) => handleChange(value, 'NOMBRE')}
-                            className="w-full"
-                            disabled
-                        />
-                    </div>
-                    <div>
-                        <label>Apellidos</label>
-                        <Input
-                            name="APELLIDOS"
-                            value={formData.APELLIDOS}
-                            onChange={(value) => handleChange(value, 'APELLIDOS')}
-                            className="w-full"
-                            disabled
-                        />
-                    </div>
-                    <div>
-                        <label>DNI</label>
-                        <Input
-                            name="DNI"
-                            value={formData.DNI}
-                            onChange={(value) => handleChange(value, 'DNI')}
+                            name="NOMBRES"
+                            value={formData.NOMBRES}
+                            onChange={(value) => handleChange(value, 'NOMBRES')}
                             className="w-full"
                             disabled
                         />
@@ -153,74 +228,19 @@ const Index = () => {
                     </div>
                 </div>
                 <div className="flex items-center justify-center mt-6">
-                    <Button appearance="primary" type="submit">
+                    <Button appearance="primary" type="submit"
+                        onClick={handleSubmit}
+                    >
                         Registrar
                     </Button>
                 </div>
             </div>
             <div className="w-full p-8 bg-white rounded-lg shadow-md mb-8">
                 <CustomTable
-                    title="Listado de Asistentes"
+                    title={"Asistencia de Hoy " + (new Date().toLocaleDateString())}
                     columns={renderColumnsTable()}
-                    data={
-                        [
-                            {
-                                CODIGO: '001',
-                                NOMBRE: 'Juan',
-                                APELLIDOS: 'Pérez',
-                                DNI: '12345678',
-                                FECHA: '2021-08-01',
-                                HORA: '08:00:00',
-                            },
-                            {
-                                CODIGO: '002',
-                                NOMBRE: 'María',
-                                APELLIDOS: 'Gómez',
-                                DNI: '87654321',
-                                FECHA: '2021-08-01',
-                                HORA: '08:30:00',
-                            },
-                            {
-                                CODIGO: '002',
-                                NOMBRE: 'María',
-                                APELLIDOS: 'Gómez',
-                                DNI: '87654321',
-                                FECHA: '2021-08-01',
-                                HORA: '08:30:00',
-                            }, {
-                                CODIGO: '002',
-                                NOMBRE: 'María',
-                                APELLIDOS: 'Gómez',
-                                DNI: '87654321',
-                                FECHA: '2021-08-01',
-                                HORA: '08:30:00',
-                            }, {
-                                CODIGO: '002',
-                                NOMBRE: 'María',
-                                APELLIDOS: 'Gómez',
-                                DNI: '87654321',
-                                FECHA: '2021-08-01',
-                                HORA: '08:30:00',
-                            }, {
-                                CODIGO: '002',
-                                NOMBRE: 'María',
-                                APELLIDOS: 'Gómez',
-                                DNI: '87654321',
-                                FECHA: '2021-08-01',
-                                HORA: '08:30:00',
-                            }, {
-                                CODIGO: '002',
-                                NOMBRE: 'María',
-                                APELLIDOS: 'Gómez',
-                                DNI: '87654321',
-                                FECHA: '2021-08-01',
-                                HORA: '08:30:00',
-                            },
-
-                        ]
-
-                    }
-                    progressPending={false}  // Ajusta según el estado de carga de tus datos
+                    data={[]}
+                    progressPending={false}  
                 />
             </div>
         </div>

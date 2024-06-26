@@ -30,7 +30,7 @@ const SideBar = () => {
                 <Sidenav.Body>
                     <Nav activeKey={activeKey} onSelect={handleSelect}>
                         <Nav.Item eventKey="1" icon={<DashboardIcon />}>
-                            Enviar Código QR
+                            Generar Código QR
                         </Nav.Item>
                         <Nav.Item eventKey="2" icon={<DashboardIcon />}>
                             Registrar Asistencia

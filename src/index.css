@@ -11,3 +11,29 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.choose::-webkit-file-upload-button {
+  color: rgb(0, 0, 0);
+  display: inline-block;
+  background: #e6e6e6;
+  border: none;
+  padding: 8px 15px;
+  font-weight: 700;
+  border-radius: 3px;
+  white-space: nowrap;
+  cursor: pointer;
+  font-size: 10pt;
+}
+
+.choose::file-selector-button {
+  color: rgb(0, 0, 0);
+  display: inline-block;
+  background: #e6e6e6;
+  border: none;
+  padding: 8px 15px;
+  font-weight: 500;
+  border-radius: 3px;
+  white-space: nowrap;
+  cursor: pointer;
+  font-size: 10pt;
+}
