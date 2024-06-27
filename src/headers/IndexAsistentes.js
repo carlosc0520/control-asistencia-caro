@@ -9,41 +9,23 @@ const IndexTableAsistentes = [
         cell: row => <div style={{ width: '100%', textAlign: 'center' }}>{row.index}</div>,
     },
     {
-        name: 'Grupo',
-        cell: row => <div style={{ width: '100%' }}>{row.dscrpcn}</div>,
+        name: 'Nombres',
+        cell: row => <div style={{ width: '100%' }}>{
+            row.NOMBRES.replace(/[^a-zA-ZáéíóúÁÉÍÓÚ ]/g, "").toUpperCase()
+        }</div>,
     },
     {
-        name: 'Estado',
-        cell:
-            row => {
-                return (
-                    <div className='items-center' style={{ width: '100%', textAlign: 'center' }}>
-                        <Whisper
-                            style={{ width: '100%', height: '100%' }} trigger="hover"
-                            placement={"top"} controlId={"control-id-bottom"}
-                            speaker={
-                                <Tooltip>{row.gdestdo === 'A' ? "Activo" : "Inactivo"}</Tooltip>
-                            }
-                        >
-                            {row.gdestdo === 'A' ?
-                                <Badge style={{ background: '#4caf50' }} /> : <Badge />
-                            }
-                        </Whisper>
-                    </div >
-                );
-            },
-    },
-    {
-        name: <div style={{ width: '100%', textAlign: "left" }}>F. Carga</div>,
+        name: <div style={{ width: '100%', textAlign: "center" }}>Ingreso</div>,
         cell: row => {
-            return (<span style={Alignment.left}>{format.ChangePicker(row.fedcn, '/')}</span>)
+            return (<span style={Alignment.center}>{row.FINGRESO ? format.FormatoFecha(row.FINGRESO, '/') : ""}</span>)
         },
     },
     {
-        name: 'U. Edición',
-        width: '150px',
-        cell: row => <span style={Alignment.center}>{row.uedcn}</span>
-    },
+        name: <div style={{ width: '100%', textAlign: "center" }}>Salida</div>,
+        cell: row => {
+            return (<span style={Alignment.center}>{row.FSALIDA ? format.FormatoFecha(row.FSALIDA, '/') : ""}</span>)
+        },
+    }
 ];
 
 const IndexTableAsistentesTxt = [

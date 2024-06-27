@@ -2,6 +2,8 @@ import './App.css';
 import 'rsuite/dist/rsuite.min.css';
 import { Outlet } from 'react-router-dom';
 import SideBar from './views/SideBar';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
@@ -12,6 +14,20 @@ function App() {
       <div className="flex-grow p-4 bg-gray-100">
         <Outlet />
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      {/* Same as */}
+      <ToastContainer />
     </div>
   );
 }

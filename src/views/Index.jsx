@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, SelectPicker } from 'rsuite';
-import fun from './funciones'; 
-import CustomTable from '../components/CustomTable';  
+import fun from './funciones';
+import CustomTable from '../components/CustomTable';
 import columnsHeaders from '../headers/IndexAsistentes';
 import asistenciaProxie from '../proxies/asistenciaProxie';
 import { toast } from 'react-toastify';
@@ -15,6 +15,8 @@ const Index = () => {
         TIPO: 1,
     });
     const [eventos, setEventos] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [registros, setRegistros] = useState([]);
 
     useEffect(() => {
         const cargarEventos = async () => {
@@ -69,19 +71,22 @@ const Index = () => {
                     .replace(/Â/g, '')
                     .replace(/Ãº/g, 'Ú');
 
-                console.log('Texto corregido:', textoCorregido);
                 textoCorregido = textoCorregido.trim();
                 let datos = textoCorregido.split(';');
                 let codigo = datos?.[0]?.split(':')?.[1] || "";
                 let nombre = datos?.[1]?.split(':')?.[1] || "";
 
-                setFormData((prevData) => ({
-                    ...prevData,
-                    CODIGO: codigo.replace(/'/g, ''),
-                    NOMBRES: nombre.replace(/'/g, ''),
-                    FECHA: new Date().toISOString().split('T')[0],
-                    HORA: fun.formatearHora(new Date()),
-                }));
+                if (codigo.length == 20){
+                    setFormData((prevData) => ({
+                        ...prevData,
+                        CODIGO: codigo.replace(/'/g, ''),
+                        NOMBRES: nombre.replace(/'/g, ''),
+                        FECHA: new Date().toISOString().split('T')[0],
+                        HORA: fun.formatearHora(new Date()),
+                    }));
+
+                    toast.info('QR leído correctamente', { toastId: 'qr' });
+                }
             } else {
                 setFormData((prevData) => ({
                     ...prevData,
@@ -103,24 +108,40 @@ const Index = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // valir que evento, codigo, y tipo tenga algo
+        toast.dismiss('asistencia');
         if (!formData.IDEVENTO) return toast.error('Seleccione un evento', { toastId: 'evento' });
         if (!formData.CODIGO) return toast.error('Ingrese un código', { toastId: 'codigo' });
         if (!formData.TIPO) return toast.error('Seleccione un tipo', { toastId: 'tipo' });
+        if (formData.CODIGO.length !== 20) return toast.error('Código incorrecto', { toastId: 'codigo' });
 
         // enviar datos al servidor
         asistenciaProxie.createAsistencia(formData)
             .then((response) => {
-                console.log('Response:', response);
-                if (response.status === 200) {
-                    toast.success('Asistencia registrada correctamente', { toastId: 'asistencia' });
-                    // setFormData({
-                    //     QR: '',
-                    //     IDEVENTO: null,
-                    //     CODIGO: '',
-                    //     NOMBRES: '',
-                    //     TIPO: 1,
-                    // });
+                if ([201, 200].includes(response.status)) {
+                    if(response.data.STATUS == false){
+                        toast.error(response.data?.MESSAGE || "Error al registrar", { toastId: 'asistencia' });
+                        return;
+                    }
+
+                    if(formData.TIPO == 1){
+                        toast.success('Asistencia registrada correctamente', { toastId: 'asistencia' });
+                    }
+
+                    if(formData.TIPO == 2){
+                        toast.success('Salida registrada correctamente', { toastId: 'asistencia' });
+                    }
+
+                    setFormData({
+                        QR: '',
+                        IDEVENTO: formData.IDEVENTO,
+                        CODIGO: '',
+                        NOMBRES: '',
+                        HORA: '',
+                        FECHA: '',
+                        TIPO: formData.TIPO,
+                    });
+
+                    onSearch(true);
                 } else {
                     toast.error('Error al registrar la asistencia', { toastId: 'asistencia' });
                 }
@@ -134,6 +155,34 @@ const Index = () => {
         return columnsHeaders.IndexTableAsistentes;
     };
 
+    const onSearch = (value = null) => {
+        if (!formData.IDEVENTO) {
+            toast.error('Seleccione un evento', { toastId: 'evento' });
+            return
+        }
+
+        if(!value) toast.info('Buscando asistentes', { toastId: 'buscando' });
+        asistenciaProxie.getAsistentes({
+            IDEVENTO: formData.IDEVENTO
+        })
+            .then((response) => {
+                if (response.status === 200) {
+                    setIsSubmitting(true);
+                    setRegistros(response?.data || []);
+                    toast.dismiss('buscando');
+                } else {
+                    setRegistros([]);
+                    toast.error('Error al buscar asistentes', { toastId: 'buscando' });
+                }
+            })
+            .catch((error) => {
+                setRegistros([]);
+                toast.error('Error al buscar asistentes', { toastId: 'buscando' });
+            });
+    }
+
+
+    
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
             <div className="w-full p-8 bg-white rounded-lg shadow-md mb-8">
@@ -142,6 +191,7 @@ const Index = () => {
                     <div className="flex flex-col col-span-2">
                         <label className='mb-2'>Evento</label>
                         <SelectPicker
+                            disabled={isSubmitting}
                             data={eventos}
                             value={formData.IDEVENTO}
                             onChange={(value) => setFormData((prevData) => ({
@@ -157,7 +207,7 @@ const Index = () => {
                         <SelectPicker
                             data={[
                                 { label: 'Entrada', value: 1 },
-                                { label: 'Saluda', value: 2 },
+                                { label: 'Salida', value: 2 },
                             ]}
                             value={formData?.TIPO || null}
                             onChange={(value) => {
@@ -177,6 +227,7 @@ const Index = () => {
                     <div>
                         <label>QR</label>
                         <Input
+                            disabled={!isSubmitting}
                             style={{ color: "white" }}
                             name="QR"
                             autoComplete='off'
@@ -233,14 +284,41 @@ const Index = () => {
                     >
                         Registrar
                     </Button>
+                    <Button appearance="default" type="submit"
+                        style={{ background: '#4caf50', color: 'white' }}
+                        onClick={() => {
+                            onSearch();
+                        }}
+                        className="ml-4"
+                    >
+                        Buscar
+                    </Button>
+                    <Button appearance="default"
+                        onClick={() => {
+                            setRegistros([]);
+                            setFormData({
+                                QR: '',
+                                IDEVENTO: null,
+                                CODIGO: '',
+                                NOMBRES: '',
+                                TIPO: formData.TIPO,
+                                HORA: '',
+                                FECHA: '',
+                            });
+                            setIsSubmitting(false);
+                        }}
+                        style={{ background: '#f44336', color: 'white' }}
+                        className="ml-4">
+                        Limpiar
+                    </Button>
                 </div>
             </div>
             <div className="w-full p-8 bg-white rounded-lg shadow-md mb-8">
                 <CustomTable
                     title={"Asistencia de Hoy " + (new Date().toLocaleDateString())}
                     columns={renderColumnsTable()}
-                    data={[]}
-                    progressPending={false}  
+                    data={registros}
+                    progressPending={false}
                 />
             </div>
         </div>

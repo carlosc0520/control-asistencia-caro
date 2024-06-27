@@ -7,6 +7,9 @@ const asistenciaProxie = {
     async getEventos() {
         return axios.get(URL + '/control/asistencias/eventos?INIT=0&ROWS=10000');
     },
+    async getAsistentes(data) {
+        return axios.get(URL + '/control/asistencias/list?INIT=0&ROWS=10000&IDEVENTO=' + data.IDEVENTO);
+    },
     async createAsistencia(data) {
         return axios.post(URL + '/control/asistencias/add', data);
     },
