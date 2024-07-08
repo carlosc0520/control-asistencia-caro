@@ -10,6 +10,14 @@ const asistenciaProxie = {
     async getAsistentes(data) {
         return axios.get(URL + '/control/asistencias/list?INIT=0&ROWS=10000&IDEVENTO=' + data.IDEVENTO);
     },
+
+    async getAsistentesModel(data) {
+        return axios.get(URL + '/control/asistencias/listAsistentes?IDEVENTO=' + data.IDEVENTO);
+    },
+    async getAsistentesFull(data) {
+        return axios.get(URL + '/control/asistencias/listFull?INIT=0&ROWS=10000&IDEVENTO=' + data.IDEVENTO + '&FECHA=' + data.FECHA);
+    },
+    
     async createAsistencia(data) {
         return axios.post(URL + '/control/asistencias/add', data);
     },

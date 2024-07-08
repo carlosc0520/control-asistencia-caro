@@ -18,6 +18,12 @@ const SideBar = () => {
             case '2':
                 navigate('/registrar-asistencia');
                 break;
+            case '3':
+                navigate('/registros');
+                break;
+            case '4':
+                navigate('/registrar-asistencia-manual');
+                break;
             default:
                 break;
         }
@@ -34,6 +40,12 @@ const SideBar = () => {
                         </Nav.Item>
                         <Nav.Item eventKey="2" icon={<DashboardIcon />}>
                             Registrar Asistencia
+                        </Nav.Item>
+                        <Nav.Item eventKey="3" icon={<DashboardIcon />}>
+                            Registros
+                        </Nav.Item>
+                        <Nav.Item eventKey="4" icon={<DashboardIcon />}>
+                            Asistencia Manual
                         </Nav.Item>
                     </Nav>
                 </Sidenav.Body>

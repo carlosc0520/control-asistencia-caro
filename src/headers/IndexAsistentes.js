@@ -28,6 +28,39 @@ const IndexTableAsistentes = [
     }
 ];
 
+const IndexTableAsistentesMap = [
+    {
+        name: '',
+        width: '70px',
+        cell: row => <div style={{ width: '100%', textAlign: 'center' }}>{row.index}</div>,
+    },
+    {
+        name: 'Nombres',
+        cell: row => <div style={{ width: '100%' }}>{
+            row.NOMBRES.replace(/[^a-zA-ZáéíóúÁÉÍÓÚ ]/g, "").toUpperCase()
+        }</div>,
+    },
+    {
+        name: <div style={{ width: '100%', textAlign: "center" }}>Ingreso</div>,
+        cell: row => {
+            return (<span style={Alignment.center}>{row?.FINGRESO1  || ""}</span>)
+        },
+    },
+    {
+        name: <div style={{ width: '100%', textAlign: "center" }}>Salida</div>,
+        cell: row => {
+            return (<span style={Alignment.center}>{row.FSALIDA1 || ""}</span>)
+        },
+    },
+    {
+        name: <div style={{ width: '100%', textAlign: "center" }}>Salida</div>,
+        cell: row => {
+            return (<span style={Alignment.center}>{row?.TIEMPO ||  ""}</span>)
+        },
+    }
+];
+
+
 const IndexTableAsistentesTxt = [
     {
         name: '',
@@ -49,5 +82,6 @@ const IndexTableAsistentesTxt = [
 
 export default {
     IndexTableAsistentes,
-    IndexTableAsistentesTxt
+    IndexTableAsistentesTxt,
+    IndexTableAsistentesMap
 }

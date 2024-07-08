@@ -1,16 +1,20 @@
 const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const diasSemana = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const options = {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: true,
+  timeZone: 'UTC'  
+};
 
 const FormatoFecha = (datestring) => {
-  //12/11/2021 09:42:58
   let date = new Date(datestring);
-  let day = (date.getDate() + "").padStart(2, "0");
-  let month = (date.getMonth() + 1 + "").padStart(2, "0");
-  let year = (date.getFullYear() + "").padStart(2, "0");
-  let hour = (date.getHours() + "").padStart(2, "0");
-  let minutes = (date.getMinutes() + "").padStart(2, "0");
-  let seconds = (date.getSeconds() + "").padStart(2, "0");
-  return `${day}/${month}/${year} ${hour}:${minutes}:${seconds}`;
+  return String(date.toLocaleString('es-ES', options)).replace(/,/g, '');
+
 };
 
 const fechaLarga = (fecha = null) => {
