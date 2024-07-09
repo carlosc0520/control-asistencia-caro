@@ -24,6 +24,9 @@ const SideBar = () => {
             case '4':
                 navigate('/registrar-asistencia-manual');
                 break;
+            case '5':
+                navigate('/reporte');
+                break;
             default:
                 break;
         }
@@ -31,6 +34,7 @@ const SideBar = () => {
 
     return (
         <div className="h-full">
+            <img src="https://ccfirma.com/wp-content/uploads/2023/06/logo-2024-4-1.png" alt="" />
             <hr />
             <Sidenav expanded={expanded} defaultOpenKeys={['3', '4']} appearance="subtle">
                 <Sidenav.Body>
@@ -46,6 +50,9 @@ const SideBar = () => {
                         </Nav.Item>
                         <Nav.Item eventKey="4" icon={<DashboardIcon />}>
                             Asistencia Manual
+                        </Nav.Item>
+                        <Nav.Item eventKey="5" icon={<DashboardIcon />}>
+                            Reporte
                         </Nav.Item>
                     </Nav>
                 </Sidenav.Body>

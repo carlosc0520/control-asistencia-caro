@@ -10,6 +10,7 @@ import EnviarQR from './views/EnviarQR';
 import Index from './views/Index';
 import Registros from './views/Registros';
 import Index2 from './views/Index2';
+import Reporte from './views/Reporte';
 
 const container = document.getElementById("root");
 const root = createRoot(container);
@@ -23,6 +24,7 @@ root.render(
         <Route path="registrar-asistencia" element={<Index />} />
         <Route path="registros" element={<Registros />} />
         <Route path="registrar-asistencia-manual" element={<Index2 />} />
+        <Route path="reporte" element={<Reporte />} />
       </Route>
     </Routes>
   </Router>
